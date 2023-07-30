@@ -31,17 +31,30 @@ function mellat_gateway_init()
         {
             public function __construct()
             {
+
                 // credentials
                 $this->id = 'mellat_gateway'; // Unique ID for your gateway, e.g., ‘your_gateway’
-                $this->icon = apply_filters('woocommerce_mellat_gateway', plugins_url() . '/assets/images/logo.png'); // show an image next to the gateway’s name on the frontend
+                $this->icon = apply_filters('woocommerce_mellat_gateway', plugins_url('/assets/images/logo.png', __FILE__)); // show an image next to the gateway’s name on the frontend
                 $this->has_fields = false; //Can be set to true if you want payment fields to show on the checkout (if doing a direct integration)
                 $this->method_title = __('بانک ملت'); // Title of the payment method shown on the admin page.
                 $this->method_description = __('درگاه پرداخت بانک ملت'); // Description for the payment method shown on the admin page.
+
 
                 // options you’ll show in admin on your gateway settings page and make use of the WC Settings API.
                 $this->init_form_fields();
                 // get the settings and load them into variables,
                 $this->init_settings();
+
+                $this->title = $this->settings['title'];
+                $this->description = $this->settings['description'];
+
+                if (version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>=')) {
+                    add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+                } else {
+                    add_action('woocommerce_update_options_payment_gateways', array($this, 'process_admin_options'));
+                }
+                add_action('woocommerce_receipt_' . $this->id . '', array($this, 'Send_to_BehPardakht_Gateway_by_ham3da'));
+                add_action('woocommerce_api_' . strtolower(get_class($this)) . '', array($this, 'Return_from_BehPardakht_Gateway_by_ham3da'));
             }
 
             /**
@@ -78,7 +91,6 @@ function mellat_gateway_init()
                             'desc_tip' => true,
                             'description' => __('توضیحاتی که در طی عملیات پرداخت برای درگاه نمایش داده خواهد شد'),
                             'default' => __('پرداخت امن از طریق درگاه پرداخت به پرداخت ملت(قابل پرداخت با کلیه کارتهای عضو شتاب)')
-
                         ],
                         'account_confing' => [
                             'title' => __('اطلاعات درگاه پرداخت'),
@@ -135,6 +147,24 @@ function mellat_gateway_init()
                             'default' => __('پرداخت با شکست مواجه شد. شرح خطا: %failed%')
                         ],
                     ]
+                );
+            }
+
+            public function proccess_payments($order_id)
+            {
+                global $woocommerce;
+                $order = new WC_Order($order_id);
+
+                // Mark as on-hold (we're awaiting the cheque)
+                // $order->update_status('on-hold', __('در انتظار پرداخت', 'woocommerce'));
+
+                // Remove cart
+                // $woocommerce->cart->empty_cart();
+
+                // Return thankyou redirect
+                return array(
+                    'result' => 'success',
+                    'redirect' => $this->get_return_url($order)
                 );
             }
         }
