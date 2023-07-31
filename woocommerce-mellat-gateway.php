@@ -78,7 +78,6 @@ function Init_BehPardakht_Gateway() {
 				$this->title       = $this->settings['title'];
 				$this->description = $this->settings['description'];
 
-
 				$this->terminal_id = $this->settings['terminal_id'];
 				$this->username    = $this->settings['username'];
 				$this->password    = $this->settings['password'];
@@ -203,13 +202,13 @@ function Init_BehPardakht_Gateway() {
 				$currency = $order->get_currency();
 				$currency = apply_filters( 'WC_BehPardakht_Currency', $currency, $order_id );
 
-
 				$form = '<form action="" method="POST" class="BehPardakht-checkout-form" id="BehPardakht-checkout-form">
 				<input type="submit" name="BehPardakht_submit" class="button alt" id="BehPardakht-payment-button" value="' . __( 'پرداخت' ) . '"/>
 				<a class="button cancel" href="' . wc_get_checkout_url() . '">' . __( 'بازگشت' ) . '</a>
-			</form>
-                     <br/>';
+				</form>
+            	<br/>';
 				$form = apply_filters( 'WC_BehPardakht_Form', $form, $order_id, $woocommerce );
+
 
 				$show_factor = false;
 				if ( $this->order_pay_show == 'yes' ) {
@@ -222,12 +221,13 @@ function Init_BehPardakht_Gateway() {
 
 				if ( $show_factor ) {
 					if ( ! isset( $_POST["BehPardakht_submit"] ) ) {
-
 						do_action( 'WC_BehPardakht_Gateway_Before_Form', $order_id, $woocommerce );
 						echo $form;
 						do_action( 'WC_BehPardakht_Gateway_After_Form', $order_id, $woocommerce );
 					}
 				}
+
+
 
 				if ( ! $show_factor ) {
 					$Amount = (int) ( $order->get_total() );
@@ -277,7 +277,6 @@ function Init_BehPardakht_Gateway() {
 						$PayResult = explode( ',', $result->return );
 
 						if ( $PayResult[0] == "0" ) {
-
 							echo '<p>در حال اتصال به درگاه پرداخت ...</p>';
 							$RefID = $PayResult[1];
 
@@ -287,11 +286,12 @@ function Init_BehPardakht_Gateway() {
 							wc_update_order_item_meta( $order_id, 'RefId', $RefID );
 
 							$html = '<form name="behpardakht" method="post" action="https://bpm.shaparak.ir/pgwchannel/startpay.mellat">
-				<input type="hidden" name="RefId" value="' . $RefID . '">
-				<script type="text/javascript" language="JavaScript">document.behpardakht.submit();</script>
-                                </form>';
+									<input type="hidden" name="RefId" value="' . $RefID . '">
+									<script type="text/javascript" language="JavaScript">document.behpardakht.submit();</script>
+                                	</form>';
 							die( $html );
-						} else {
+						}
+						else {
 							$fault = $PayResult[0];
 							$err   = $this->get_error_msg( $fault );
 
@@ -361,7 +361,6 @@ function Init_BehPardakht_Gateway() {
 							'saleReferenceId' => $SaleReferenceId
 						);
 
-
 						// URL also can be ir.zarinpal.com or de.zarinpal.com
 						$client = new SoapClient( 'https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl', [ 'encoding' => 'UTF-8' ] );
 
@@ -387,7 +386,6 @@ function Init_BehPardakht_Gateway() {
 								if ( $Note ) {
 									$order->add_order_note( $Note, 1 );
 								}
-
 
 								$Notice = wpautop( wptexturize( $this->success_massage ) );
 
